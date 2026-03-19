@@ -47,10 +47,49 @@ Gjennomgå denne filen ved starten av hver økt.
 
 ---
 
-## [2026-03-19] Forbedringer til neste runde
+## [2026-03-19] Runde 1 – RESULTATER OG POST-MORTEM
 
-1. Multiple observasjoner > coverage bredde
-2. Bruk settlement-stats for stabilitetsvurdering
-3. Modellbasert prediksjon basert på sim-mekanikk
-4. Iterativ forbedring med batches
-5. Hent analysis-endepunkt etter runden lukker for å lære av feil
+**Score: 19.1 pts, #73 av 117 (under middels)**
+
+| Seed | Score | Kommentar |
+|------|-------|-----------|
+| 1 | 11.2 | Svært dårlig |
+| 2 | 10.2 | Dårligst |
+| 3 | 12.3 | Dårlig |
+| 4 | 14.8 | Dårlig |
+| 5 | 47.2 | OK – enklere/mer forutsigbart kart? |
+
+**Hovedfeil fra Layer Analysis:**
+
+1. **Settlement-laget er vår største feil.** Ground truth viser STORE sammenhengende klynger som ekspanderer territorialt fra initial-posisjoner. Vi predikerte spredte små prikker. Eksempel: celle (36,22) vi sa 3% settlement, virkeligheten var 24%. Vi undervurderte territoriell ekspansjon massivt.
+
+2. **Overkonfidens på Empty.** Vi predikerte 84% empty for celler langt fra settlements, men ground truth var 72%. Settlement-vekst spiste seg inn i "empty"-områder mye mer enn priors forventet.
+
+3. **Port-prediksjon feil.** Porter dukker opp langs kyst i mønstre knyttet til settlement-ekspansjon, ikke bare der initial ports var.
+
+4. **Ruin-prediksjon for konsentrert.** Ekte ruiner er spredt langs settlement-grenser, ikke i klynger.
+
+5. **Seed 5 scoret 4x bedre (47.2).** Trolig enklere kart. Viser at selv vår basale tilnærming fungerer når simuleringen er mer forutsigbar.
+
+6. **1 observasjon per celle er fundamentalt utilstrekkelig.** Simulering er stokastisk — trenger multiple samples for ekte sannsynlighetsfordelinger.
+
+**Nøkkelinnsikt:** Problemet er IKKE coverage. Problemet er at settlement-ekspansjon er en romlig prosess (store sammenhengende blob-er), og vi modellerte det som uavhengige per-celle sannsynligheter.
+
+---
+
+## [2026-03-19] Forbedringer til neste runde (prioritert)
+
+### Høyest prioritet (størst poenggevinst)
+1. **Modeller settlement-ekspansjon som romlig prosess.** Settlements vokser som sammenhengende territorier, ikke tilfeldige prikker. Bruk BFS/flood-fill fra initial settlements med sannsynlighetsavtak.
+2. **Multiple observasjoner per celle >> full coverage.** F.eks. 5 queries × 2 viewports × 5 seeds = 50. Dekk settlement-tette områder flere ganger for stokastisk statistikk.
+3. **Bedre priors for settlement-vekst.** Celler nær eksisterende settlements (spesielt innen 3-5 celler) har MYE høyere settlement-sannsynlighet enn vi ga dem.
+
+### Medium prioritet
+4. **Bruk settlement-stats** (population, food, wealth, defense) til å forutsi vekst vs. kollaps.
+5. **Modeller portvekst langs kysten** — porter opptrer der settlements møter hav.
+6. **Ruins oppstår ved settlement-grenser** — modelér dette.
+
+### Taktisk
+7. Iterativ forbedring med batches + godkjenning
+8. Bruk analysis-endepunkt etter runden lukker
+9. Cache alt og bygg visualiseringer for å sammenligne prediksjon vs. forventet
