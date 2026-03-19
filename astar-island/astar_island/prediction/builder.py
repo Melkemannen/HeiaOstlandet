@@ -1,7 +1,12 @@
-"""Hovedlogikk for å bygge sannsynlighetsprediksjoner.
+"""Hovedlogikk for å bygge sannsynlighetsprediksjoner v2.
 
-Kombinerer observasjoner fra simulate-queries med prior-kunnskap
+Kombinerer observasjoner fra simulate-queries med kalibrerte priors
 fra initial state for å bygge H x W x 6 probability tensorer.
+
+v2-forbedringer vs v1:
+- Bruker build_prior_map (romlig modell) i stedet for per-celle priors
+- Bedre Bayesian smoothing basert på antall observasjoner
+- Spatial blending: uobserverte naboer påvirkes av observerte celler
 """
 
 import numpy as np
@@ -9,7 +14,7 @@ from collections import Counter
 
 from ..config import NUM_CLASSES, MIN_PROB, CLASS_NAMES, terrain_code_to_class
 from ..analysis.observations import collect_observations, compute_global_frequencies
-from .priors import get_prior_for_cell
+from .priors import build_prior_map
 
 
 def build_predictions(initial_data_list, query_results, map_width, map_height,
@@ -17,9 +22,9 @@ def build_predictions(initial_data_list, query_results, map_width, map_height,
     """Bygg sannsynlighetsfordelinger for alle seeds.
 
     For hver celle:
-    - Observert multiple ganger: empirisk frekvensfordeling + smoothing
-    - Observert én gang: observasjon med usikkerhets-blending
-    - Uobservert: prior basert på initial state + global frekvenser
+    - Observert multiple ganger: empirisk frekvensfordeling + lite smoothing
+    - Observert én gang: observasjon blandet med prior
+    - Uobservert: prior fra romlig modell + global frekvens-blending
 
     Returnerer dict: seed_index → numpy array (H, W, 6)
     """
@@ -37,38 +42,55 @@ def build_predictions(initial_data_list, query_results, map_width, map_height,
         print(f"  Celler observert: {n_observed}/{map_width * map_height}")
         print(f"  Celler med multiple observasjoner: {n_multi}")
 
-        # Globale frekvenser for fallback
+        # Globale frekvenser fra observasjoner
         global_probs = np.array(compute_global_frequencies(observations))
 
         # Hent initial state data
         initial = initial_data_list[seed_idx]
         initial_grid = initial["grid"]
-        settlement_set = set(
-            (s.get("x", 0), s.get("y", 0)) for s in initial["settlements"]
+
+        # Bygg romlig prior-kart (ny v2-modell)
+        prior_map = build_prior_map(
+            initial_grid, initial["settlements"],
+            map_height, map_width
         )
 
         # Bygg prediction tensor
-        pred = np.full((map_height, map_width, NUM_CLASSES), MIN_PROB)
+        pred = np.copy(prior_map)
 
         for y in range(map_height):
             for x in range(map_width):
                 if (y, x) in observations:
-                    pred[y][x] = _probs_from_observations(observations[(y, x)])
-                else:
-                    pred[y][x] = get_prior_for_cell(
-                        initial_grid[y][x], x, y,
-                        map_width, map_height, settlement_set
-                    )
+                    obs = observations[(y, x)]
+                    obs_probs = _probs_from_observations(obs)
+                    prior = prior_map[y][x]
+
+                    # Blend observasjon med prior, vektet etter antall obs
+                    n = len(obs)
+                    if n >= 3:
+                        # Mange observasjoner: stol mest på data
+                        weight = 0.85
+                    elif n == 2:
+                        # To observasjoner: god balanse
+                        weight = 0.75
+                    else:
+                        # Én observasjon: bland mer med prior
+                        weight = 0.60
+
+                    pred[y][x] = weight * obs_probs + (1 - weight) * prior
 
         # Bland uobserverte dynamiske celler med global fordeling
-        if observations:
+        if observations and global_probs is not None:
             for y in range(map_height):
                 for x in range(map_width):
                     if (y, x) not in observations:
                         code = initial_grid[y][x]
-                        if code not in (5, 10):
-                            blend = 0.15
-                            pred[y][x] = (1 - blend) * pred[y][x] + blend * global_probs
+                        if code not in (5, 10):  # Ikke statiske
+                            is_border = (y == 0 or y == map_height - 1 or
+                                         x == 0 or x == map_width - 1)
+                            if not is_border:
+                                blend = 0.10
+                                pred[y][x] = (1 - blend) * pred[y][x] + blend * global_probs
 
         # Enforce minimum floor og normaliser
         pred = np.maximum(pred, MIN_PROB)
@@ -89,13 +111,15 @@ def _probs_from_observations(obs_list):
     for cls, count in counts.items():
         probs[cls] = count / total
 
-    # Smoothing: mer usikkerhet med færre observasjoner
+    # Smoothing: mindre med flere observasjoner
     if total == 1:
-        alpha = 0.15
-    elif total <= 3:
+        alpha = 0.10  # Redusert fra 0.15 — stol litt mer på enkeltobs
+    elif total == 2:
         alpha = 0.05
+    elif total <= 4:
+        alpha = 0.03
     else:
-        alpha = 0.02
+        alpha = 0.01
 
     uniform = np.full(NUM_CLASSES, 1 / NUM_CLASSES)
     return (1 - alpha) * probs + alpha * uniform
@@ -107,3 +131,8 @@ def _print_prediction_stats(pred):
     for cls in range(NUM_CLASSES):
         count = int(np.sum(argmax == cls))
         print(f"  Predikert dominant {CLASS_NAMES[cls]}: {count} celler")
+
+    # Vis gjennomsnittlig konfidens
+    max_probs = np.max(pred, axis=2)
+    print(f"  Gjennomsnittlig konfidens: {max_probs.mean():.3f}")
+    print(f"  Min konfidens: {max_probs.min():.3f}")
