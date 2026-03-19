@@ -10,6 +10,7 @@ Repo for lag HeiaØstlandet i NM i AI 2026 (19.–22. mars). Tre oppgaver, hver 
 3. **Les ALL dokumentasjon før du bygger løsninger.**
 4. **Forklar hva du gjør og hva som skjedde.** Logg alltid resultater i oppgavens `lessons.md`.
 5. **Kjør i batches, ikke alt på én gang.**
+6. **Fokusér kun på aktiv oppgave.** Les kun filer i mappen til oppgaven du jobber med. Ikke les, analysér eller cache innhold fra de andre oppgavemappene. Dette sparer tokens og holder context-vinduet fokusert.
 
 ## Oppgaver
 
