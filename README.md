@@ -1,0 +1,2 @@
+# HeiaOstlandet
+NMiAI repo
