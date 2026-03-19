@@ -1,47 +1,37 @@
-# Astar Island – Instruksjoner for Claude
+# HeiaOstlandet – NM i AI 2026
 
 ## Prosjektoversikt
-NM i AI 2026 – Astar Island challenge. Prediker sannsynlighetsfordelinger for terrengtyper på et 40x40 grid etter 50 år med Norse-sivilisasjonssimulering.
+Repo for lag HeiaØstlandet i NM i AI 2026 (19.–22. mars). Tre oppgaver, hver i sin mappe.
 
-## Kritiske regler
+## Kritiske regler (gjelder ALLE oppgaver)
 
-1. **ALDRI kjør simulate- eller submit-kall uten eksplisitt godkjenning fra brukeren.** Disse bruker begrensede budsjetter (50 queries/runde).
-2. **Vis plan FØRST, vent på godkjenning.** Splitt arbeid i faser: analyse (gratis) → plan (vis) → execute (godkjenn).
-3. **Les ALL dokumentasjon før du bygger løsninger.** Sjekk docs/ mappen.
-4. **Forklar hva du gjør og hva som skjedde.** Logg alltid resultater.
-5. **Kjør i batches, ikke alt på én gang.** F.eks. 5-10 queries → vis resultater → juster → fortsett.
+1. **ALDRI kjør irreversible API-kall uten eksplisitt godkjenning fra brukeren.** Budget-kostende kall, submissions, osv.
+2. **Vis plan FØRST, vent på godkjenning.** Splitt arbeid i faser: analyse → plan (vis) → execute (godkjenn).
+3. **Les ALL dokumentasjon før du bygger løsninger.**
+4. **Forklar hva du gjør og hva som skjedde.** Logg alltid resultater i oppgavens `lessons.md`.
+5. **Kjør i batches, ikke alt på én gang.**
 
-## Prosjektstruktur
+## Oppgaver
+
+| Mappe | Oppgave | Status |
+|-------|---------|--------|
+| `astar-island/` | Astar Island – terrengprediksjon | Runde 1 ferdig (19.1 pts), venter på runde 2 |
+| `tripletex/` | Tripletex: AI Accounting Agent | Ikke startet |
+| `norgesgruppen/` | NorgesGruppen Data: Object Detection | Ikke startet |
+
+## Repostruktur
 ```
-run.py                    # Hovedskript med faser
-astar_island/
-  config.py               # Konstanter og terrain-mapping
-  api/client.py           # HTTP-klient med rate limiting
-  analysis/
-    initial_state.py      # Analyser initial states (gratis)
-    observations.py       # Aggreger simulate-resultater
-  query_planning/
-    planner.py            # Viewport-planlegging
-  prediction/
-    priors.py             # Prior-sannsynligheter
-    builder.py            # Bygg sannsynlighetsfordelinger
-    submit.py             # Validering og innsending
-  data/cache.py           # Lagring til disk
-docs/                     # Instruksjonsfiler per modul
+CLAUDE.md                 # Denne filen (overordnet)
+astar-island/             # Oppgave 1
+  run.py                  # Hovedskript med faser
+  requirements.txt
+  lessons.md              # Leksjoner for denne oppgaven
+  astar_island/           # Python-pakke
+  docs/                   # Instruksjonsfiler per modul
+tripletex/                # Oppgave 2
+  lessons.md
+norgesgruppen/            # Oppgave 3
+  lessons.md
 ```
 
-## Terrengklasser (6 stk)
-0=Empty, 1=Settlement, 2=Port, 3=Ruin, 4=Forest, 5=Mountain
-
-Terrengkoder → klasser: Ocean(10)→0, Plains(11)→0, Empty(0)→0, Settlement(1)→1, Port(2)→2, Ruin(3)→3, Forest(4)→4, Mountain(5)→5
-
-## Statiske regler
-- Mountain (5) og Ocean (10) endrer seg ALDRI
-- Kanten av kartet (hele rammen) er alltid Ocean
-- Minimum sannsynlighet per klasse: 0.01 (aldri 0.0)
-- Scoring: entropy-weighted KL divergence
-
-## API
-- Base: https://api.ainm.no/astar-island/
-- Rate limits: simulate 5/s, submit 2/s
-- Submit overskriver – siste innsending teller
+Hver oppgave har sin egen `lessons.md` med leksjoner og regler spesifikke for den oppgaven.
