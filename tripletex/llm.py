@@ -29,6 +29,7 @@ TASK_TYPES = [
     "update_employee",
     "update_customer",
     "delete_entry",
+    "register_hours",
     "unknown",
 ]
 
@@ -60,6 +61,10 @@ For reference, common fields per task type:
 - create_department: name
 - update_employee: employee_name, field_to_update, new_value
 - update_customer: customer_name, field_to_update, new_value
+- register_hours: employee_email, project_name, activity_name, date, hours
+- register_payment: invoice_id, customer_name, amount, payment_date
+- create_credit_note: invoice_id, customer_name, date
+- delete_entry: entity_type (invoice/voucher/order/travel_expense), entity_id, customer_name
 
 Return only the JSON object, no explanation."""
 

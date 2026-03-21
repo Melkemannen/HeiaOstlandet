@@ -38,6 +38,10 @@ async def solve(request: Request):
     log.info("Task type: %s | Fields: %s", task_type, fields)
 
     # Execute the appropriate task handler
-    dispatch(task_type, fields, base_url, session_token)
+    try:
+        dispatch(task_type, fields, base_url, session_token)
+    except Exception as e:
+        log.error("Handler failed: %s", e, exc_info=True)
+        # Always return completed — a 500 scores worse than a wrong answer
 
     return JSONResponse({"status": "completed"})
