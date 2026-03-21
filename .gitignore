@@ -212,3 +212,7 @@ __marimo__/
 cached_data/
 
 .venv
+NM_NGD_coco_dataset
+NM_NGD_coco_dataset.zip
+NM_NGD_product_images
+NM_NGD_product_images.zip
