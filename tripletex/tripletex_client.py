@@ -53,9 +53,23 @@ class TripletexClient:
         departments = self.list("/department", params={"fields": "id,name", "count": 1})
         return departments[0]["id"] if departments else None
 
+    def find_department_id(self, name: str) -> int | None:
+        if not name:
+            return self.get_first_department_id()
+        departments = self.list("/department", params={"name": name, "fields": "id,name", "count": 5})
+        if departments:
+            return departments[0]["id"]
+        # Fallback: search case-insensitively through all departments
+        all_depts = self.list("/department", params={"fields": "id,name", "count": 100})
+        for d in all_depts:
+            if name.lower() in (d.get("name") or "").lower():
+                return d["id"]
+        return self.get_first_department_id()
+
     def create_employee(self, first_name: str, last_name: str, email: str = None,
                         employee_number: str = None, department_id: int = None,
-                        user_type: str = "STANDARD") -> dict:
+                        user_type: str = "STANDARD", date_of_birth: str = None,
+                        national_identity_number: str = None, phone_number: str = None) -> dict:
         payload = {"firstName": first_name, "lastName": last_name, "userType": user_type}
         if email:
             payload["email"] = email
@@ -63,6 +77,12 @@ class TripletexClient:
             payload["employeeNumber"] = employee_number
         if department_id:
             payload["department"] = {"id": department_id}
+        if date_of_birth:
+            payload["dateOfBirth"] = date_of_birth
+        if national_identity_number:
+            payload["nationalIdentityNumber"] = national_identity_number
+        if phone_number:
+            payload["phoneNumber"] = phone_number
         return self.post("/employee", payload)["value"]
 
     def create_customer(self, name: str, email: str = None,

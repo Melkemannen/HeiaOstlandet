@@ -18,7 +18,7 @@ def handle_register_payment(client: TripletexClient, fields: dict) -> None:
         if customer:
             invoices = client.list("/invoice", params={
                 "customerId": customer["id"],
-                "fields": "id,amount,amountCurrency",
+                "fields": "id",
                 "count": 5,
             })
             if invoices:
