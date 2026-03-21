@@ -101,6 +101,13 @@ def classify_and_extract(prompt: str) -> tuple[str, dict]:
     extract_input = EXTRACT_PROMPT.format(task_type=task_type, prompt=prompt)
     raw_fields = _call(extract_input)
     fields = _extract_json(raw_fields)
+
+    # Unwrap if model returned {"create_employee": {...}} instead of flat dict
+    if len(fields) == 1:
+        only_key = next(iter(fields))
+        if isinstance(fields[only_key], dict):
+            fields = fields[only_key]
+
     log.info("Extracted fields: %s", fields)
 
     return task_type, fields
