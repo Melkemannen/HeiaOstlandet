@@ -3,7 +3,7 @@ import logging
 
 from tripletex_client import TripletexClient
 
-from tasks.customer import handle_create_customer
+from tasks.customer import handle_create_customer, handle_update_customer
 from tasks.delete_entry import handle_delete_entry
 from tasks.department import handle_create_department
 from tasks.employee import handle_create_employee, handle_update_employee
@@ -20,6 +20,7 @@ HANDLERS = {
     "create_employee": handle_create_employee,
     "update_employee": handle_update_employee,
     "create_customer": handle_create_customer,
+    "update_customer": handle_update_customer,
     "create_product": handle_create_product,
     "create_invoice": handle_create_invoice,
     "register_payment": handle_register_payment,

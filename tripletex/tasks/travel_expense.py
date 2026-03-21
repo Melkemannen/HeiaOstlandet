@@ -11,6 +11,7 @@ def handle_create_travel_expense(client: TripletexClient, fields: dict) -> None:
     start_date = fields.get("date") or fields.get("start_date") or str(date.today())
     end_date = fields.get("end_date") or start_date
     employee_name = fields.get("employee_name") or ""
+    amount = fields.get("amount")
 
     # Find employee (required field)
     employee_id = _find_employee_id(client, employee_name)
@@ -24,6 +25,11 @@ def handle_create_travel_expense(client: TripletexClient, fields: dict) -> None:
         payload["purpose"] = purpose
     if employee_id:
         payload["employee"] = {"id": employee_id}
+    if amount is not None:
+        try:
+            payload["totalAmount"] = float(amount)
+        except (TypeError, ValueError):
+            pass
 
     result = client.post("/travelExpense", payload)
     log.info("Created travel expense id=%s", result.get("value", {}).get("id"))

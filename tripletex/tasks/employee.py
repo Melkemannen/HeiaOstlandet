@@ -7,6 +7,23 @@ log = logging.getLogger(__name__)
 
 ADMIN_KEYWORDS = {"administrator", "admin", "kontoadministrator"}
 
+# Map LLM snake_case field names to Tripletex API camelCase field names.
+# Both 'phone'/'phone_number' and 'national_id'/'national_identity_number' are kept
+# since the LLM may output either variant.
+_EMPLOYEE_FIELD_MAP = {
+    "first_name": "firstName",
+    "last_name": "lastName",
+    "email": "email",
+    "phone": "phoneNumber",
+    "phone_number": "phoneNumber",
+    "date_of_birth": "dateOfBirth",
+    "national_id": "nationalIdentityNumber",
+    "national_identity_number": "nationalIdentityNumber",
+    "employee_number": "employeeNumber",
+    "user_type": "userType",
+    "role": "userType",
+}
+
 
 def handle_create_employee(client: TripletexClient, fields: dict) -> None:
     first_name = fields.get("first_name") or ""
@@ -109,5 +126,6 @@ def handle_update_employee(client: TripletexClient, fields: dict) -> None:
         return
 
     employee_id = employees[0]["id"]
-    client.put(f"/employee/{employee_id}", {field_to_update: new_value})
-    log.info("Updated employee %s: %s = %s", employee_id, field_to_update, new_value)
+    api_field = _EMPLOYEE_FIELD_MAP.get(field_to_update, field_to_update)
+    client.put(f"/employee/{employee_id}", {api_field: new_value})
+    log.info("Updated employee %s: %s = %s", employee_id, api_field, new_value)

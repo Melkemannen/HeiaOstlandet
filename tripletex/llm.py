@@ -53,8 +53,8 @@ For reference, common fields per task type:
 - create_customer: name, email, phone, organization_number
 - create_product: name, price, product_number
 - create_invoice: customer_name, invoice_date, due_date
-- register_payment: invoice_id, amount, payment_date
-- create_credit_note: invoice_id
+- register_payment: invoice_id, customer_name, amount, payment_date
+- create_credit_note: invoice_id, customer_name, date
 - create_travel_expense: employee_name, description, date, amount
 - delete_travel_expense: description (to identify which one)
 - create_project: name, customer_name, start_date
@@ -62,8 +62,6 @@ For reference, common fields per task type:
 - update_employee: employee_name, field_to_update, new_value
 - update_customer: customer_name, field_to_update, new_value
 - register_hours: employee_email, project_name, activity_name, date, hours
-- register_payment: invoice_id, customer_name, amount, payment_date
-- create_credit_note: invoice_id, customer_name, date
 - delete_entry: entity_type (invoice/voucher/order/travel_expense), entity_id, customer_name
 
 Return only the JSON object, no explanation."""
