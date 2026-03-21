@@ -216,3 +216,6 @@ NM_NGD_coco_dataset
 NM_NGD_coco_dataset.zip
 NM_NGD_product_images
 NM_NGD_product_images.zip
+yolo_dataset/
+*.pt
+node_modules/

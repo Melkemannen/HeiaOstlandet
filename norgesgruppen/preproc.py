@@ -15,7 +15,7 @@ def coco_to_yolo(coco_annotations_path, output_dir="yolo_dataset"):
 
     # Copy images to output/images
     for img in coco["images"]:
-        src = Path("NM_NGD_coco_dataset", img["file_name"])
+        src = Path("NM_NGD_coco_dataset", "images", img["file_name"])
         dst = Path(output_dir, "images", img["file_name"])
         shutil.copy(src, dst)
 
