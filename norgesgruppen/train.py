@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 
 # --- Paths ---
-DATASET_YAML = "dataset.yaml"
+DATASET_YAML = "yolo_dataset/dataset.yaml"
 MODEL = "yolov8n.pt"  # Nano YOLOv8 variant (smallest/fastest)
 OUTPUT_NAME = "norgesgruppen_yolov8n_augmented"
 
@@ -10,7 +10,7 @@ CONFIG = {
     "data": DATASET_YAML,
     "model": MODEL,
     "epochs": 100,
-    "imgsz": [640, 800, 1024],  # Multi-scale training
+    "imgsz": 640,  # Image size
     "batch": 32,  # Larger batch size for nano model
     "optimizer": "AdamW",
     "lr0": 0.01,
@@ -31,8 +31,7 @@ CONFIG = {
     "mosaic": 1.0,  # Mosaic augmentation
     "mixup": 0.5,   # MixUp augmentation
     "copy_paste": 0.5,  # Copy-paste augmentation
-    "auto_augment": "rand",  # Auto augmentation
-    "autoanchor": True,  # Auto anchor optimization
+    "auto_augment": "randaugment",  # Auto augmentation
     "patience": 50,  # Early stopping
     "augment": True,  # Enable all augmentations
     "val": True,  # Validate during training
@@ -49,7 +48,7 @@ if __name__ == "__main__":
     # --- Export to ONNX ---
     model.export(
         format="onnx",
-        imgsz=CONFIG["imgsz"][0],
+        imgsz=CONFIG["imgsz"],
         opset=17,
         dynamic=False,
         simplify=True,
