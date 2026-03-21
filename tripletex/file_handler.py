@@ -16,7 +16,11 @@ def extract_text_from_files(files: list) -> str:
     for f in files:
         filename = f.get("filename", "unknown")
         mime = f.get("mime_type", "")
-        data = base64.b64decode(f["content_base64"])
+        content_b64 = f.get("content_base64")
+        if not content_b64:
+            log.warning("Skipping file %s: no content_base64", filename)
+            continue
+        data = base64.b64decode(content_b64)
 
         try:
             if mime == "application/pdf" or filename.lower().endswith(".pdf"):

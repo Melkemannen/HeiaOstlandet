@@ -136,9 +136,10 @@ class TripletexClient:
     def create_project(self, name: str, customer_id: int, start_date: str) -> dict:
         payload = {
             "name": name,
-            "customer": {"id": customer_id},
             "startDate": start_date,
         }
+        if customer_id is not None:
+            payload["customer"] = {"id": customer_id}
         return self.post("/project", payload)["value"]
 
     def create_department(self, name: str) -> dict:
