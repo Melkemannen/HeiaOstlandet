@@ -4,16 +4,8 @@ from tripletex_client import TripletexClient
 
 log = logging.getLogger(__name__)
 
-# Tripletex role identifiers
-ROLE_MAP = {
-    "administrator": "ROLE_ADMINISTRATOR",
-    "admin": "ROLE_ADMINISTRATOR",
-    "kontoadministrator": "ROLE_ADMINISTRATOR",
-    "user": "ROLE_USER",
-    "bruker": "ROLE_USER",
-    "accountant": "ROLE_ACCOUNTANT",
-    "regnskapsforer": "ROLE_ACCOUNTANT",
-}
+# Map role keywords to Tripletex userType values
+ADMIN_KEYWORDS = {"administrator", "admin", "kontoadministrator"}
 
 
 def handle_create_employee(client: TripletexClient, fields: dict) -> None:
@@ -22,26 +14,21 @@ def handle_create_employee(client: TripletexClient, fields: dict) -> None:
     email = fields.get("email")
     role_raw = (fields.get("role") or "").lower()
 
+    # Administrator = EXTENDED userType, otherwise STANDARD
+    user_type = "EXTENDED" if role_raw in ADMIN_KEYWORDS else "STANDARD"
+
+    department_id = client.get_first_department_id()
+    log.info("Using department id=%s", department_id)
+
     employee = client.create_employee(
         first_name=first_name,
         last_name=last_name,
         email=email,
+        department_id=department_id,
+        user_type=user_type,
     )
     employee_id = employee["id"]
-    log.info("Created employee id=%s", employee_id)
-
-    # Assign role if specified
-    if role_raw:
-        role = ROLE_MAP.get(role_raw, role_raw.upper())
-        _assign_role(client, employee_id, role)
-
-
-def _assign_role(client: TripletexClient, employee_id: int, role: str) -> None:
-    try:
-        client.put(f"/employee/{employee_id}", {"roles": [{"name": role}]})
-        log.info("Assigned role %s to employee %s", role, employee_id)
-    except Exception as e:
-        log.error("Failed to assign role %s: %s", role, e)
+    log.info("Created employee id=%s userType=%s", employee_id, user_type)
 
 
 def handle_update_employee(client: TripletexClient, fields: dict) -> None:
