@@ -219,3 +219,5 @@ NM_NGD_product_images.zip
 yolo_dataset/
 *.pt
 node_modules/
+runs/
+venv_yolo810/

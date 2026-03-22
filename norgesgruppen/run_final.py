@@ -11,15 +11,19 @@ def main():
     args = parser.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = YOLO("best.onnx")
+    model = YOLO("best.pt")
 
     predictions = []
     for img in sorted(Path(args.input).iterdir()):
         if img.suffix.lower() not in (".jpg", ".jpeg", ".png"):
             continue
         image_id = int(img.stem.split("_")[-1])
-        results = model(str(img), device=device, verbose=False,
-                        conf=0.15, iou=0.5, max_det=300)
+
+        with torch.no_grad():
+            results = model(str(img), device=device, verbose=False,
+                            imgsz=1280, conf=0.1, iou=0.5, max_det=500,
+                            augment=True)
+
         for r in results:
             if r.boxes is None:
                 continue
@@ -28,7 +32,8 @@ def main():
                 predictions.append({
                     "image_id": image_id,
                     "category_id": int(r.boxes.cls[i].item()),
-                    "bbox": [round(x1, 1), round(y1, 1), round(x2 - x1, 1), round(y2 - y1, 1)],
+                    "bbox": [round(x1, 1), round(y1, 1),
+                             round(x2 - x1, 1), round(y2 - y1, 1)],
                     "score": round(float(r.boxes.conf[i].item()), 3),
                 })
 
